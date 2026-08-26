@@ -6,7 +6,7 @@
 MCP / ツール呼び出し / ルーターモードは対象外です。
 
 - リポジトリ: https://github.com/mckey-dev/llamachat-webui
-- **更新日:** 2026-08-25
+- **更新日:** 2026-08-26
 
 ## 必要環境
 
@@ -43,7 +43,7 @@ venv\Scripts\python.exe -m pip install -r requirements.txt
 venv/bin/python -m pip install -r requirements.txt
 ```
 
-ブラウザで http://127.0.0.1:7860 を開きます。
+ブラウザで http://127.0.0.1:7862 を開きます。
 
 起動前にバックエンドを指定する例:
 
@@ -62,13 +62,13 @@ export LLAMA_BACKEND=cuda
 `venv` を有効化したうえで:
 
 ```bash
-python launch.py --server-name 127.0.0.1 --server-port 7860
+python launch.py --server-name 127.0.0.1 --server-port 7862
 ```
 
 | 引数 | 説明 |
 |------|------|
 | `--server-name` | Gradio の待受アドレス（既定 `127.0.0.1`） |
-| `--server-port` | Gradio のポート（既定 `7860`） |
+| `--server-port` | Gradio のポート（既定 `7862`） |
 | `--share` | Gradio の公開 URL を発行する |
 | `--data-dir` | 設定・会話・アップロードの保存先（既定 `data/`） |
 | `--install-server` | 既存バイナリがあっても `llama-server` を再取得する |
@@ -157,6 +157,102 @@ UI は `GET /health` が成功するまで待ちます。**Stop** でプロセ�
 - **Settings** — モデル検索パス、システムプロンプト、サンプリング（空欄はサーバ既定）、会話 JSON の import / export
 
 データは `data/` 以下です（`settings.json`、`conversations/`、`uploads/`、`models/`、`llama-server/`）。
+
+## 画面の使い方
+
+ブラウザで UI を開いたら、次の順が基本です。
+
+1. **Models** でモデル（と必要なら llama-server）を用意する  
+2. ヘッダの **Start** で `llama-server` を起動する（状態が ready になるまで待つ）  
+3. **Chat** または **Notebook** で使う  
+4. 終わったらヘッダの **Stop**
+
+### ヘッダ（全タブ共通）
+
+画面上部にタイトル、状態表示、**Start** / **Stop** があります。
+
+| 操作 | 内容 |
+|------|------|
+| **Start** | Models / Settings の内容を保存し、`llama-server` を子プロセスとして起動する。`GET /health` が成功するまで待つ |
+| **Stop** | `llama-server` を終了する |
+| 状態表示 | 起動中・ready・停止・エラーなどを表示する |
+
+モデルや Extra args を変えたあとは、**Stop → Start** で再起動してください（同時に 1 モデルだけ）。
+
+### Models
+
+`llama-server` の導入と、起動に渡すモデル・引数を設定します。
+
+1. **Install llama-server**（未導入のとき）  
+   Backend（`auto` / `cpu` / `cuda` など）と任意の Release tag を選び、**Install / Update**。パスは **llama-server path** に入ります。自前バイナリならパスを直接指定しても構いません。
+2. モデルを指定する（どちらか一方で可）  
+   - **Hugging Face repo (-hf)** … 例: `ggml-org/Qwen2.5-3B-Instruct-GGUF:Q4_K_M`  
+   - **Local GGUF path (-m)** … ローカルの `.gguf`  
+   任意で **mmproj**（Vision）、**MTP draft**、および下の起動オプション。
+3. **Model catalog (ID)**  
+   Models directory 配下の ID フォルダ単位で、本体・mmproj・MTP をまとめて選べます。**Refresh** で再スキャン。
+4. **Download from Hugging Face**（任意）  
+   Repository とファイル名を指定して、Models directory の ID フォルダへ取得します。
+5. ヘッダの **Start**  
+   下の **llama-server log** に起動ログが出ます。
+
+パスやカタログの詳細は「モデルの使い方」を参照してください。
+
+#### Context size / GPU layers / Extra args
+
+Models タブの次の項目は、**Start** 時に `llama-server` へ渡されます。変更後は Stop → Start が必要です。
+
+| 項目 | llama-server | 説明 |
+|------|--------------|------|
+| **Context size (-c, 0 = model default)** | `-c` | コンテキスト長（トークン数）。会話・プロンプト・生成が収まる上限に近い値です。大きいほどメモリ（VRAM / RAM）を使います。**`0` のときは `-c` を付けず、モデル側の既定に任せます。** |
+| **GPU layers (-ngl)** | `-ngl` | GPU に載せるレイヤ数。`auto`（既定）は llama-server に任せる、`all` は可能な限り全部、数値はレイヤ数の上限です。CPU のみのビルドでは効果が薄い／無視されることがあります。VRAM が足りないときは数値を下げてください。 |
+| **Extra llama-server args** | （追加 argv） | 上記以外の起動引数を空白区切りで書きます。例: `--flash-attn on`、`--fit on --fit-target 24576`（単位 MiB）。シェルと同様に引用符で囲めます。MTP 利用時、ここに `--spec-type` / `--spec-draft-n-max` が無ければ UI 側で既定を足します。 |
+
+A6000（48GB）で VRAM を約 24GB 空けたい例:
+
+```text
+--fit on --fit-target 24576
+```
+
+### Chat
+
+会話形式のチャットです（`/v1/chat/completions`）。**Start** 済みである必要があります。
+
+| 操作 | 内容 |
+|------|------|
+| **Conversations** | 保存済み会話の切り替え |
+| **New chat** | 新しい会話を作る |
+| **Delete** | 選択中の会話を削除する |
+| 入力欄 | テキスト送信。画像を添付可（Vision モデル + mmproj 時）。Enter で送信 |
+| **Stop generation** | 生成を中断する |
+
+応答はストリーミング表示されます。推論タグ（`<think>` など）や Markdown / LaTeX、速度（tok/s）も表示されます。システムプロンプトとサンプリングは **Settings** の値が使われます。
+
+### Notebook
+
+チャットテンプレートを使わない生テキスト生成です（`/completion`）。エディタ全体がプロンプトで、生成文はその末尾に追記されます。
+
+| 操作 | 内容 |
+|------|------|
+| **Generate** | 現在のテキストをプロンプトとして生成を開始する |
+| **Stop** | 生成を中断する |
+| **Undo last generation** | 直前の生成分だけ取り消す |
+
+こちらも **Start** 済みである必要があり、サンプリングは **Settings** を使います。
+
+### Settings
+
+アプリ全体の設定です。変更は保存され、次の **Start** や生成に反映されます（モデル切替は再 Start が必要）。
+
+| 項目 | 内容 |
+|------|------|
+| **Models directory** | ダウンロード先・カタログの基準ディレクトリ |
+| **Additional model directories** | 別アプリのモデル置き場など。1 行に 1 パス |
+| **System prompt** | Chat 用。空ならモデル既定 |
+| サンプリング | Temperature / Top K / Top P / Min P / Repeat・Presence・Frequency penalty / Max tokens / Seed。空欄はサーバ既定または無制限・ランダム |
+| **Vision image max side** | 添付画像の長辺上限（px） |
+| **Save settings** | 設定をディスクへ保存 |
+| **Import / Export conversations** | 会話 JSON の読み書き |
 
 ## クラウド用 Notebook
 

@@ -65,7 +65,7 @@ def main() -> None:
     """引数を解釈し、必要なら llama-server を入れて UI を起動する。"""
     parser = argparse.ArgumentParser(description="llamachat-webui - Gradio frontend for llama-server")
     parser.add_argument("--server-name", default="127.0.0.1", help="Gradio bind address")
-    parser.add_argument("--server-port", type=int, default=7860, help="Gradio bind port")
+    parser.add_argument("--server-port", type=int, default=7862, help="Gradio bind port")
     parser.add_argument("--share", action="store_true", help="Create a Gradio public URL")
     parser.add_argument(
         "--data-dir",

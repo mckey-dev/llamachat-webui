@@ -1,5 +1,5 @@
 {
-  "llama_server_path": "C:\\work\\AI\\llamachat-webui\\data\\llama-server\\b10549-cpu\\llama-server.exe",
+  "llama_server_path": "C:\\work\\AI\\llamachat-webui\\data\\llama-server\\b10635-cpu\\llama-server.exe",
   "host": "127.0.0.1",
   "port": 8080,
   "model_path": "C:\\work\\AI\\llamachat-webui\\data\\models\\Huihui-Qwythos-9B-Claude-Mythos-5-1M-abliterated-Q4_K\\Huihui-Qwythos-9B-Claude-Mythos-5-1M-abliterated-Q4_K.gguf",
@@ -11,6 +11,7 @@
   "ctx_size": 0,
   "n_gpu_layers": "auto",
   "extra_args": "",
+  "model_catalogs": {},
   "system_prompt": "",
   "temperature": 0.8,
   "top_k": 40,
