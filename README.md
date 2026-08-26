@@ -160,14 +160,14 @@ UI は `GET /health` が成功するまで待ちます。**Stop** でプロセ�
 
 ## クラウド用 Notebook
 
-`notebooks/` に Colab 用と Paperspace 用があります。**ノートだけ置いて Run All** すれば、残りのファイルは [GitHub](https://github.com/mckey-dev/llamachat-webui) から `git clone` し、venv・`llama-server`・UI 起動まで進みます。毎回不要な処理（更新、venv 作り直し、停止、掃除）は、関数呼び出しのコメントを外して使います。
+`notebooks/` に Colab 用と Paperspace 用があります。**ノートだけ置いて Run All** すれば、残りのファイルは [GitHub](https://github.com/mckey-dev/llamachat-webui) から `git clone` し、`llama-server`・UI 起動まで進みます。毎回不要な処理（更新、停止、掃除）は、関数呼び出しのコメントを外して使います。
 
 GPU ランタイムでは初回に `llama-server` をソースから CUDA ビルドし、実行に必要な成果物だけを永続ディレクトリへ残します。UI は背景起動するので、起動セルは URL を出して完了します。モデルの **Start** は Gradio 上で行います。
 
 | ノート | 用途 |
 |--------|------|
-| [`notebooks/llamachat-webui-paperspace.ipynb`](notebooks/llamachat-webui-paperspace.ipynb) | Paperspace Gradient。`/notebooks` にノートだけ置く。起動後は TensorBoard URL（ポート 6006） |
-| [`notebooks/llamachat-webui-colab.ipynb`](notebooks/llamachat-webui-colab.ipynb) | Google Colab。ランタイムを GPU にする。起動後は `*.gradio.live` |
+| [`notebooks/llamachat-webui-paperspace.ipynb`](notebooks/llamachat-webui-paperspace.ipynb) | Paperspace Gradient。`/notebooks` にノートだけ置く。起動後は `*.gradio.live`（Gradio Share）。venv は `/tmp` |
+| [`notebooks/llamachat-webui-colab.ipynb`](notebooks/llamachat-webui-colab.ipynb) | Google Colab。ランタイムを GPU にする。起動後は `*.gradio.live`。**venv なし**（ランタイムへ pip） |
 
 Paperspace の配置（`WORKSPACE` はありません）:
 
@@ -183,9 +183,8 @@ Paperspace の配置（`WORKSPACE` はありません）:
 Colab の配置:
 
 ```
-/content/notebooks/llamachat-webui     # git clone（セッション限り）
-/content/tmp/llamachat-webui           # 一時（venv、モデル実体、ログ）
-/content/drive/MyDrive/llamachat-webui # 永続（設定、会話、llama-server、残したいモデル）
+/content/drive/MyDrive/llamachat-webui # 本体（git clone）+ 設定 + 会話 + llama-server
+/content/tmp/llamachat-webui           # 一時（モデル実体、ログ、PID。venv は使わない）
 ```
 
 ## 注意
